@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kingshot Rally Timer (UTC)</title>
+
+<style>
+  :root{
+    --card:#fff;
+    --border:#d1d5db;
+    --text:#111827;
+    --muted:#6b7280;
+    --bg:#f3f4f6;
+    --danger:#b00020;
+    --danger-bg:#ffe9ec;
+    --ok:#065f46;
+    --ok-bg:#ecfdf5;
+    --accent:#111827;
+  }
+
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+
+  .banner{
+    background:linear-gradient(120deg,#0b1020,#1f2a5c,#0b1020);
+    padding:28px 16px 18px;
+    text-align:center;
+  }
+  .banner h1{
+    margin:0;
+    font-size:40px;
+    font-weight:900;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    background:linear-gradient(90deg,#ffd166,#ff4d6d,#7c3aed);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .banner p{
+    margin:8px 0 0;
+    font-size:14px;
+    color:rgba(255,255,255,.85);
+  }
+
+  .wrap{ max-width:1100px; margin:0 auto; padding:16px; }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:14px;
+    box-shadow:0 8px 18px rgba(0,0,0,.05);
+  }
+
+  label{ font-weight:750; display:block; margin:8px 0 4px; }
+  input, select{
+    width:100%;
+    box-sizing:border-box;
+    padding:9px 10px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    font-size:14px;
+    background:#fff;
+  }
+
+  .grid{
+    display:grid;
+    gap:12px;
+    grid-template-columns:1fr;
+  }
+  @media(min-width:900px){
+    .grid{ grid-template-columns:1.2fr 1fr 1fr 1.2fr; }
+  }
+
+  .timeRow{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:6px;
+  }
+  .timeRow input{ text-align:center; }
+
+  .btns{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center; }
+  button{
+    padding:9px 12px;
+    border:none;
+    border-radius:10px;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .primary{ background:var(--accent); color:#fff; }
+  .ghost{ background:#eef2f7; }
+  .danger{ background:var(--danger-bg); color:var(--danger); }
+
+  .note{
+    font-size:12px;
+    color:var(--muted);
+    margin-top:6px;
+    line-height:1.35;
+  }
+
+  .row2{
+    display:grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap:10px;
+    align-items:end;
+  }
+  @media(max-width:900px){
+    .row2{ grid-template-columns: 1fr; }
+  }
+
+  .modeBox{
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:10px;
+    background:#fafafa;
+  }
+  .modeLine{
+    display:flex;
+    gap:8px;
+    align-items:flex-start;
+    margin:6px 0;
+    font-size:14px;
+  }
+  .modeLine input{ width:auto; margin-top:2px; }
+  .modeLine small{ color:var(--muted); display:block; margin-top:2px; }
+
+  .allyCard{ margin-top:12px; }
+
+  .allyHead{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .allyHead .tag{ flex: 1 1 180px; }
+
+  .playerHeader{
+    display:grid;
+    grid-template-columns: 1.7fr 1fr auto;
+    gap:8px;
+    font-size:12px;
+    color:var(--muted);
+    font-weight:800;
+    margin-top:10px;
+    margin-bottom:6px;
+  }
+  .marchHead{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:6px;
+    text-align:center;
+    align-items:end;
+  }
+  .marchHead .title{
+    grid-column:1 / -1;
+    text-align:center;
+  }
+
+  .players{ margin-top:0; display:flex; flex-direction:column; gap:8px; }
+
+  .playerRow{
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:10px;
+    background:#fff;
+  }
+  .playerRow.collision{
+    background:#fff4f6;
+    border-color:rgba(176,0,32,.35);
+  }
+
+  .playerGrid{
+    display:grid;
+    grid-template-columns: 1.7fr 1fr auto;
+    gap:8px;
+    align-items:center;
+  }
+  .marchWrap{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:6px;
+  }
+  .marchWrap input{ text-align:center; }
+
+  .meta{
+    margin-top:6px;
+    font-size:12px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+  }
+
+  .out{
+    white-space:pre-wrap;
+    background:#f8fafc;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:13px;
+  }
+
+  .pillOk{
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:999px;
+    background:var(--ok-bg);
+    color:var(--ok);
+    border:1px solid rgba(6,95,70,.18);
+    font-size:12px;
+    font-weight:700;
+  }
+</style>
+</head>
+
+<body>
+  <div class="banner">
+    <h1>Kingshot Rally Timer</h1>
+    <p>Baseline = final hit of the whole chain (UTC). Alliances run sequentially.</p>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="grid">
+        <div>
+          <label for="title">Target</label>
+          <input id="title" value="Turret 4">
+        </div>
+
+        <div>
+          <label>Baseline UTC</label>
+          <div class="timeRow">
+            <input id="baseH" inputmode="numeric" placeholder="H">
+            <input id="baseM" inputmode="numeric" placeholder="M">
+            <input id="baseS" inputmode="numeric" placeholder="S">
+          </div>
+          <div class="note">24-hour UTC. Minutes/seconds clamp to 0–59.</div>
+        </div>
+
+        <div>
+          <label for="spacing">Hit spacing (seconds)</label>
+          <input id="spacing" inputmode="numeric" placeholder="e.g. 11">
+          <div class="note">Type <b>11</b> = 11 seconds.</div>
+        </div>
+
+        <div>
+          <label for="order">Alliance order (optional)</label>
+          <input id="order" placeholder="war, dth, avr">
+          <div class="note">If blank, uses the order shown below.</div>
+        </div>
+      </div>
+
+      <div class="row2" style="margin-top:12px;">
+        <div>
+          <label for="lastHit">Who hits last (optional)</label>
+          <input id="lastHit" placeholder="war=Killian; avr=Lia">
+          <div class="note">Format: <b>TAG=Name</b> separated by semicolons. Tags match exactly.</div>
+        </div>
+
+        <div class="modeBox">
+          <label style="margin-top:0;">Stagger mode</label>
+          <div class="modeLine">
+            <input type="radio" name="mode" id="modeLastOnly" value="lastOnly" checked>
+            <div>
+              <b>Only last hitter is delayed</b>
+              <small>Everyone else in that alliance hits together; last hitter hits +spacing later.</small>
+            </div>
+          </div>
+          <div class="modeLine">
+            <input type="radio" name="mode" id="modeAll" value="all">
+            <div>
+              <b>Stagger everyone</b>
+              <small>Every rally gets its own spaced slot (old behaviour).</small>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label>Target presets</label>
+          <select id="presetSelect"></select>
+          <div class="btns" style="margin-top:8px;">
+            <button class="ghost" id="btnSavePreset" type="button">Save preset</button>
+            <button class="danger" id="btnDeletePreset" type="button">Delete</button>
+          </div>
+          <div class="note">Presets save alliances + march times for different targets (Turret/Castle/etc.).</div>
+        </div>
+      </div>
+
+      <div class="btns">
+        <button class="ghost" id="btnAddAlliance" type="button">+ Add alliance</button>
+        <button class="primary" id="btnGenerate" type="button">Generate</button>
+        <button class="ghost" id="btnCopy" type="button">Copy</button>
+        <span class="pillOk" id="savedPill" style="display:none;">Saved</span>
+      </div>
+    </div>
+
+    <div id="alliances"></div>
+
+    <div class="card">
+      <div class="out" id="output"></div>
+    </div>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  const PRESET_KEY = "ks_rally_timer_presets_v1";
+
+  function digitsOnly(el, maxLen=2){
+    const cleaned = (el.value || "").replace(/\D/g, "").slice(0, maxLen);
+    if (el.value !== cleaned) el.value = cleaned;
+    return cleaned === "" ? 0 : Number(cleaned);
+  }
+
+  function pad2(n){ return String(n).padStart(2, "0"); }
+
+  function hmsFromSeconds(sec){
+    const day = 86400;
+    sec = ((sec % day) + day) % day;
+    const hh = Math.floor(sec / 3600);
+    const mm = Math.floor((sec % 3600) / 60);
+    const ss = sec % 60;
+    return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
+  }
+
+  function readBaselineSeconds(){
+    const h = digitsOnly($("baseH"), 2);
+    const m = digitsOnly($("baseM"), 2);
+    const s = digitsOnly($("baseS"), 2);
+
+    const hh = Math.min(Math.max(h, 0), 23);
+    const mm = Math.min(Math.max(m, 0), 59);
+    const ss = Math.min(Math.max(s, 0), 59);
+
+    // tidy
+    if ($("baseH").value !== "") $("baseH").value = String(hh);
+    if ($("baseM").value !== "") $("baseM").value = pad2(mm);
+    if ($("baseS").value !== "") $("baseS").value = pad2(ss);
+
+    return hh * 3600 + mm * 60 + ss;
+  }
+
+  function parseOrder(){
+    return ($("order").value || "")
+      .split(",")
+      .map(x => x.trim())
+      .filter(Boolean);
+  }
+
+  function parseLastHitMap(){
+    const map = new Map();
+    ($("lastHit").value || "")
+      .split(";")
+      .map(x => x.trim())
+      .filter(Boolean)
+      .forEach(pair => {
+        const idx = pair.indexOf("=");
+        if (idx > 0){
+          const tag = pair.slice(0, idx).trim();
+          const name = pair.slice(idx + 1).trim();
+          if (tag && name) map.set(tag, name);
+        }
+      });
+    return map;
+  }
+
+  function getMode(){
+    return $("modeAll").checked ? "all" : "lastOnly";
+  }
+
+  function showSavedPill(){
+    const pill = $("savedPill");
+    pill.style.display = "inline-block";
+    setTimeout(() => pill.style.display = "none", 1000);
+  }
+
+  function addAllianceBlock(data){
+    const box = document.createElement("div");
+    box.className = "card allyCard";
+    box.innerHTML = `
+      <div class="allyHead">
+        <input class="tag" placeholder="Alliance tag">
+        <button class="danger removeAlliance" type="button">Remove</button>
+      </div>
+
+      <div class="playerHeader">
+        <div>Name</div>
+        <div class="marchHead">
+          <div class="title">March time</div>
+          <div>M</div>
+          <div>S</div>
+        </div>
+        <div></div>
+      </div>
+
+      <div class="players"></div>
+
+      <div class="btns">
+        <button class="ghost addPlayer" type="button">+ Add player</button>
+      </div>
+    `;
+
+    const playersEl = box.querySelector(".players");
+    const tagEl = box.querySelector(".tag");
+
+    function addPlayerRow(pData){
+      const row = document.createElement("div");
+      row.className = "playerRow";
+      row.innerHTML = `
+        <div class="playerGrid">
+          <input class="pName" placeholder="Name">
+          <div class="marchWrap">
+            <input class="pM" inputmode="numeric" placeholder="M">
+            <input class="pS" inputmode="numeric" placeholder="S">
+          </div>
+          <button class="danger removeRow" type="button">✕</button>
+        </div>
+        <div class="meta">
+          <span>Start: <b class="startVal">--:--:--</b></span>
+          <span>Status: <span class="statusVal">—</span></span>
+        </div>
+      `;
+
+      const nameEl = row.querySelector(".pName");
+      const mEl = row.querySelector(".pM");
+      const sEl = row.querySelector(".pS");
+
+      // Load values
+      if (pData){
+        nameEl.value = pData.name ?? "";
+        mEl.value = pData.m ?? "";
+        sEl.value = pData.s ?? "";
+      }
+
+      // digits only + clamp and autopad seconds on blur
+      mEl.addEventListener("input", () => digitsOnly(mEl, 2));
+      sEl.addEventListener("input", () => digitsOnly(sEl, 2));
+      sEl.addEventListener("blur", () => {
+        if (sEl.value === "") return;
+        const s = digitsOnly(sEl, 2);
+        const ss = Math.min(Math.max(s, 0), 59);
+        sEl.value = pad2(ss);
+      });
+
+      // Enter in seconds => focus next row name, or create new row
+      sEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter"){
+          e.preventDefault();
+          const rows = Array.from(playersEl.querySelectorAll(".playerRow"));
+          const idx = rows.indexOf(row);
+          const next = rows[idx + 1];
+          if (next){
+            next.querySelector(".pName").focus();
+          } else {
+            addPlayerRow();
+            const newRows = Array.from(playersEl.querySelectorAll(".playerRow"));
+            newRows[newRows.length - 1].querySelector(".pName").focus();
+          }
+        }
+      });
+
+      row.querySelector(".removeRow").addEventListener("click", () => row.remove());
+      playersEl.appendChild(row);
+    }
+
+    box.querySelector(".addPlayer").addEventListener("click", () => addPlayerRow());
+    box.querySelector(".removeAlliance").addEventListener("click", () => box.remove());
+
+    // If loading from preset
+    if (data?.tag) tagEl.value = data.tag;
+    if (data?.players?.length){
+      data.players.forEach(p => addPlayerRow(p));
+    } else {
+      addPlayerRow();
+    }
+
+    $("alliances").appendChild(box);
+  }
+
+  function clearAlliances(){
+    $("alliances").innerHTML = "";
+  }
+
+  function clearCollisionsAndMeta(){
+    document.querySelectorAll(".playerRow").forEach(r => {
+      r.classList.remove("collision");
+      r.querySelector(".startVal").textContent = "--:--:--";
+      r.querySelector(".statusVal").textContent = "—";
+    });
+  }
+
+  // ---------- Presets ----------
+  function readPresets(){
+    try{
+      const raw = localStorage.getItem(PRESET_KEY);
+      if (!raw) return {};
+      const obj = JSON.parse(raw);
+      return obj && typeof obj === "object" ? obj : {};
+    }catch{
+      return {};
+    }
+  }
+
+  function writePresets(presets){
+    localStorage.setItem(PRESET_KEY, JSON.stringify(presets));
+  }
+
+  function getCurrentSetupForPreset(){
+    const allianceCards = Array.from($("alliances").querySelectorAll(".allyCard"));
+    const blocks = allianceCards.map(card => {
+      const tag = (card.querySelector(".tag").value || "").trim();
+      const players = Array.from(card.querySelectorAll(".playerRow")).map(row => ({
+        name: (row.querySelector(".pName").value || "").trim(),
+        m: (row.querySelector(".pM").value || "").trim(),
+        s: (row.querySelector(".pS").value || "").trim(),
+      }));
+      return { tag, players };
+    });
+    return { blocks };
+  }
+
+  function loadPreset(name){
+    const presets = readPresets();
+    const data = presets[name];
+    if (!data) return;
+
+    clearAlliances();
+    (data.blocks || []).forEach(b => addAllianceBlock(b));
+  }
+
+  function refreshPresetSelect(selected){
+    const presets = readPresets();
+    const names = Object.keys(presets).sort((a,b)=>a.localeCompare(b));
+    const sel = $("presetSelect");
+    sel.innerHTML = "";
+
+    // Default option
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "— Select preset —";
+    sel.appendChild(opt0);
+
+    for (const n of names){
+      const opt = document.createElement("option");
+      opt.value = n;
+      opt.textContent = n;
+      sel.appendChild(opt);
+    }
+
+    if (selected && names.includes(selected)){
+      sel.value = selected;
+    } else {
+      sel.value = "";
+    }
+  }
+
+  function savePresetFlow(){
+    const name = prompt("Name this preset (e.g., Turret 4, Castle):");
+    if (!name) return;
+
+    const presets = readPresets();
+    presets[name] = getCurrentSetupForPreset();
+    writePresets(presets);
+
+    refreshPresetSelect(name);
+    $("presetSelect").value = name;
+    showSavedPill();
+  }
+
+  function deletePresetFlow(){
+    const sel = $("presetSelect").value;
+    if (!sel) return;
+    const ok = confirm(`Delete preset "${sel}"?`);
+    if (!ok) return;
+
+    const presets = readPresets();
+    delete presets[sel];
+    writePresets(presets);
+
+    refreshPresetSelect("");
+    showSavedPill();
+  }
+
+  // ---------- Timing Generation ----------
+  function generateTimings(){
+    clearCollisionsAndMeta();
+
+    const base = readBaselineSeconds();
+    const spacing = digitsOnly($("spacing"), 4);
+    if (!spacing || spacing <= 0){
+      $("output").textContent = "Enter hit spacing in seconds (e.g. 11).";
+      return;
+    }
+
+    const mode = getMode();
+    const title = ($("title").value || "").trim() || "Target";
+    const order = parseOrder();
+    const lastHitMap = parseLastHitMap();
+
+    const allianceCards = Array.from($("alliances").querySelectorAll(".allyCard"));
+
+    // Collect groups
+    const groups = new Map(); // tag -> players[]
+    for (const card of allianceCards){
+      const tag = (card.querySelector(".tag").value || "").trim();
+      if (!tag) continue;
+
+      const players = [];
+      const rows = Array.from(card.querySelectorAll(".playerRow"));
+      for (const row of rows){
+        const name = (row.querySelector(".pName").value || "").trim();
+        const m = digitsOnly(row.querySelector(".pM"), 2);
+        const s = digitsOnly(row.querySelector(".pS"), 2);
+        const mm = Math.min(Math.max(m, 0), 59);
+        const ss = Math.min(Math.max(s, 0), 59);
+        const marchSec = mm * 60 + ss;
+
+        if (!name && marchSec === 0) continue;
+
+        if (!name){
+          row.querySelector(".statusVal").textContent = "Missing name";
+          continue;
+        }
+
+        row.querySelector(".statusVal").textContent = marchSec === 0 ? "March is 0" : "OK";
+        players.push({ tag, name, marchSec, rowEl: row });
+      }
+
+      if (players.length) groups.set(tag, players);
+    }
+
+    if (groups.size === 0){
+      $("output").textContent = "Add at least one alliance with at least one player.";
+      return;
+    }
+
+    // Final alliance order: typed order first, then remaining in on-screen order
+    const finalOrder = [];
+    const seen = new Set();
+
+    for (const t of order){
+      if (groups.has(t) && !seen.has(t)){
+        finalOrder.push(t);
+        seen.add(t);
+      }
+    }
+    for (const card of allianceCards){
+      const t = (card.querySelector(".tag").value || "").trim();
+      if (groups.has(t) && !seen.has(t)){
+        finalOrder.push(t);
+        seen.add(t);
+      }
+    }
+    for (const t of groups.keys()){
+      if (!seen.has(t)) finalOrder.push(t);
+    }
+
+    // Prepare per-alliance lists (sorted + last hitter forced last)
+    const allianceLists = [];
+    for (const tag of finalOrder){
+      let list = (groups.get(tag) || []).slice()
+        .sort((a,b) => b.marchSec - a.marchSec || a.name.localeCompare(b.name));
+
+      const lastName = lastHitMap.get(tag);
+      if (lastName){
+        const idx = list.findIndex(p => p.name.toLowerCase() === lastName.toLowerCase());
+        if (idx >= 0){
+          const [picked] = list.splice(idx, 1);
+          list.push(picked);
+        }
+      }
+      allianceLists.push({ tag, list });
+    }
+
+    // Build EVENTS (landing times) for sequential chain
+    // mode "all": each player is its own event
+    // mode "lastOnly": for each alliance:
+    //   - if 1 player => one event (last)
+    //   - if >1 players => event A = all non-last together, event B = last
+    const events = []; // each event: { tag, players: [] }
+
+    for (const a of allianceLists){
+      const list = a.list;
+      if (mode === "all"){
+        for (const p of list){
+          events.push({ tag: a.tag, players: [p] });
+        }
+      } else { // lastOnly
+        if (list.length <= 1){
+          events.push({ tag: a.tag, players: list.slice() });
+        } else {
+          const nonLast = list.slice(0, -1);
+          const last = list.slice(-1);
+          events.push({ tag: a.tag, players: nonLast });
+          events.push({ tag: a.tag, players: last });
+        }
+      }
+    }
+
+    const E = events.length;
+    const startMap = new Map(); // startHMS -> players[]
+
+    function noteStart(timeStr, p){
+      if (!startMap.has(timeStr)) startMap.set(timeStr, []);
+      startMap.get(timeStr).push(p);
+    }
+
+    // Assign landing times across events: last event lands at baseline
+    events.forEach((ev, idx) => {
+      const landing = base - ((E - 1 - idx) * spacing);
+
+      for (const p of ev.players){
+        const startSec = landing - p.marchSec;
+        const startStr = hmsFromSeconds(startSec);
+        p._startStr = startStr;
+        p.rowEl.querySelector(".startVal").textContent = startStr;
+        noteStart(startStr, p);
+      }
+    });
+
+    // Output grouped by alliance (but sequential chain)
+    const out = [];
+    out.push(`=== Rally Timings for ${title} ===`);
+    out.push(`Baseline Time: ${hmsFromSeconds(base)} (UTC)`);
+
+    for (let i = 0; i < allianceLists.length; i++){
+      const { tag, list } = allianceLists[i];
+      for (const p of list){
+        out.push(`(${tag}) ${p.name}: ${p._startStr} UTC`);
+      }
+      if (i !== allianceLists.length - 1) out.push("");
+    }
+
+    // Collisions (same start second)
+    for (const [t, arr] of startMap.entries()){
+      if (arr.length > 1){
+        arr.forEach(p => {
+          p.rowEl.classList.add("collision");
+          p.rowEl.querySelector(".statusVal").textContent = "COLLISION";
+        });
+      }
+    }
+
+    $("output").textContent = out.join("\n");
+  }
+
+  // Wire buttons
+  $("btnAddAlliance").addEventListener("click", () => addAllianceBlock());
+  $("btnGenerate").addEventListener("click", generateTimings);
+  $("btnCopy").addEventListener("click", () => {
+    const text = ($("output").textContent || "").trim();
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+  });
+
+  $("btnSavePreset").addEventListener("click", savePresetFlow);
+  $("btnDeletePreset").addEventListener("click", deletePresetFlow);
+  $("presetSelect").addEventListener("change", (e) => {
+    const name = e.target.value;
+    if (!name) return;
+    loadPreset(name);
+    showSavedPill();
+  });
+
+  // Digits-only for baseline and spacing
+  ["baseH","baseM","baseS"].forEach(id => {
+    const el = $(id);
+    el.addEventListener("input", () => digitsOnly(el, 2));
+    el.addEventListener("blur", () => {
+      const v = digitsOnly(el, 2);
+      if (id === "baseH") el.value = el.value === "" ? "" : String(Math.min(v, 23));
+      if (id === "baseM") el.value = el.value === "" ? "" : pad2(Math.min(v, 59));
+      if (id === "baseS") el.value = el.value === "" ? "" : pad2(Math.min(v, 59));
+    });
+  });
+  $("spacing").addEventListener("input", () => digitsOnly($("spacing"), 4));
+
+  // Init
+  refreshPresetSelect("");
+  addAllianceBlock();
+</script>
+
+</body>
+</html>
